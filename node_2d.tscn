@@ -1,0 +1,98 @@
+[gd_scene load_steps=6 format=3 uid="uid://cu0yvyaxbfn5t"]
+
+[ext_resource type="Texture2D" uid="uid://cbofmpgxrt2c4" path="res://tiles2.png" id="1_lqpmt"]
+[ext_resource type="Script" path="res://tile_map.gd" id="2_f5cre"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_rmdsf"]
+texture = ExtResource("1_lqpmt")
+0:0/0 = 0
+0:1/0 = 0
+0:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+1:2/0 = 0
+1:1/0 = 0
+1:0/0 = 0
+2:1/0 = 0
+2:2/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+3:2/0 = 0
+3:1/0 = 0
+3:0/0 = 0
+2:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_h6wac"]
+sources/0 = SubResource("TileSetAtlasSource_rmdsf")
+
+[sub_resource type="GDScript" id="GDScript_jvoa0"]
+resource_name = "Camera"
+script/source = "extends Camera2D
+
+# Các tham số điều chỉnh zoom
+@export var MIN_ZOOM: float = 0.5  # Mức zoom nhỏ nhất
+@export var MAX_ZOOM: float = 2.0  # Mức zoom lớn nhất
+@export var ZOOM_STEP: float = 0.1  # Bước zoom mỗi lần cuộn
+
+# Biến lưu trạng thái di chuyển
+var is_dragging: bool = false
+var drag_start_position: Vector2 = Vector2.ZERO
+
+func _ready():
+	# Đảm bảo camera bắt đầu với zoom ban đầu
+	zoom = Vector2(1, 1)
+
+func _input(event):
+	# Xử lý di chuyển camera khi nhấn và giữ chuột trái
+	if event is InputEventMouseButton:
+		# Xử lý zoom
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			zoom_camera(true)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			zoom_camera(false)
+		
+		# Xử lý bắt đầu kéo chuột
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				is_dragging = true
+				drag_start_position = event.position
+			else:
+				is_dragging = false
+	
+	# Di chuyển camera khi kéo chuột
+	if event is InputEventMouseMotion and is_dragging:
+		# Tính toán vector di chuyển
+		var drag_vector = drag_start_position - event.position
+		# Di chuyển camera ngược chiều vector kéo
+		position += drag_vector 
+		# Cập nhật vị trí bắt đầu kéo
+		drag_start_position = event.position
+
+func zoom_camera(zoom_in: bool):
+	# Hàm điều chỉnh zoom
+	if zoom_in:
+		# Zoom to
+		zoom = Vector2(
+			max(zoom.x + ZOOM_STEP, MIN_ZOOM), 
+			max(zoom.y + ZOOM_STEP, MIN_ZOOM)
+		)
+	else:
+		# Zoom out
+		zoom = Vector2(
+			min(zoom.x - ZOOM_STEP, MAX_ZOOM), 
+			min(zoom.y - ZOOM_STEP, MAX_ZOOM)
+		)
+"
+
+[node name="Node2D" type="Node2D"]
+
+[node name="TileMap" type="TileMap" parent="."]
+tile_set = SubResource("TileSet_h6wac")
+format = 2
+script = ExtResource("2_f5cre")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+script = SubResource("GDScript_jvoa0")
+MIN_ZOOM = 0.1
+MAX_ZOOM = 1.0
+ZOOM_STEP = 0.05
